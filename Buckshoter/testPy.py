@@ -3,7 +3,7 @@ import game
 env = game.GameEnv()
 
 env.reset()
-env.startUp()
+
 
 state = env.get_state()
 fState = state["players"]["player1"]["items"]

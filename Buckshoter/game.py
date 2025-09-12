@@ -1,4 +1,5 @@
 import random
+from config import setItem,setHealth
 V1_props = ["magnifier","cigarette","beer","saw","handcuffs"]
 V2_props = ["phone","Reverser","Epinephrine","medications"]
 
@@ -32,10 +33,11 @@ class GameEnv:
         self.round = 1
         self.bullets_live = 0
         self.bullets_blank = 0
-        self.players["player1"] = {"health": 3, "items": []}
-        self.players["player2"] = {"health": 3, "items": []}
+        self.players["player1"] = {"health": 0, "items": []}
+        self.players["player2"] = {"health": 0, "items": []}
         self.ready = False
         self.allowToos = allowItems
+        self.startUp()
 
     def get_state(self):
         """把當前遊戲狀態轉成 dict(方便丟給AI觀察用)"""
@@ -55,7 +57,7 @@ class GameEnv:
             
         }
 
-    def startUp(self,Bullet = None,customItem = False):
+    def startUp(self,customHealth = False,Bullet = None,customItem = False):
         if(Bullet==None):
             total = random.randint(3, 8)
             # red 至少 1，gray 至少 1
@@ -66,12 +68,28 @@ class GameEnv:
         self.bullets_blank = Bullet["blank"]
         self.bullets_live = Bullet["live"]
         if customItem:
-            from config import setItem
-            setItem(self.get_state())
+            
+            p1Item, p2Item = setItem(self.get_state())
+            self.players["player1"]["items"] = p1Item
+            self.players["player2"]["items"] = p2Item
+
         else:
             itemAmount = random.randint(0,8)
             self.players["player1"]["items"] = random.choices(allowItems,k=itemAmount)
             self.players["player2"]["items"] = random.choices(allowItems,k=itemAmount)
+
+        self.turn = 0
+        self.round = 1
+        if customHealth == False:
+            health = random.randint(3,6)
+            self.players["player1"]["health"] = health
+            self.players["player2"]["health"] = health
+        else:
+            p1hp,p2hp = setHealth(self.get_state())
+            self.players["player1"]["health"] = p1hp
+            self.players["player2"]["health"] = p2hp
+
+
     
         
 
