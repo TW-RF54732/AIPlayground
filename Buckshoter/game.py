@@ -5,6 +5,16 @@ V2_props = ["phone","Reverser","Epinephrine","medications"]
 
 allowItems = V1_props
 
+ACTION_SPACE = {
+    0: "shoot_opponent",
+    1: "shoot_self",
+    2: "use_item_magnifier",
+    3: "use_item_cigarette",
+    4: "use_item_beer",
+    5: "use_item_saw",
+    6: "use_item_handcuffs"  
+}
+
 class GameEnv:
     def __init__(self):
         # 公共資訊
@@ -29,12 +39,16 @@ class GameEnv:
 
     def reset(self):
         """初始化遊戲"""
+        # game data
         self.turn = 0
         self.round = 1
         self.bullets_live = 0
         self.bullets_blank = 0
-        self.players["player1"] = {"health": 0, "items": []}
-        self.players["player2"] = {"health": 0, "items": []}
+        self.players["player1"] = {"health": 0, "items": [], "skip" : False}
+        self.players["player2"] = {"health": 0, "items": [], "skip" : False}
+        self.shortened = False
+
+        # env setting
         self.ready = False
         self.allowToos = allowItems
         self.startUp()
@@ -88,7 +102,9 @@ class GameEnv:
             p1hp,p2hp = setHealth(self.get_state())
             self.players["player1"]["health"] = p1hp
             self.players["player2"]["health"] = p2hp
-
+    
+    def step(self):
+        return "no step"
 
     
         
