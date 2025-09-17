@@ -26,7 +26,6 @@ class GameEnv:
 
         # 個別玩家資訊
         self.players = {
-<<<<<<< HEAD
             0: {
                 "health": 3,
                 "items": [],
@@ -37,10 +36,6 @@ class GameEnv:
                 "items": [],
                 "skip": False
             }
-=======
-            "player1": {"health": 3, "items": [], "skip": False},
-            "player2": {"health": 3, "items": [], "skip": False}
->>>>>>> 6791a0ef1ff6639aa5d5c8451794c5a5e226d548
         }
         
         self.itemConfig = False
@@ -53,17 +48,12 @@ class GameEnv:
         self.itemPerRound = 0
         self.bullets_live = 0
         self.bullets_blank = 0
-<<<<<<< HEAD
         self.bulletsList = []
         self.players[0] = {"health": 0, "items": [], "skip" : False}
         self.players[1] = {"health": 0, "items": [], "skip" : False}
         self.shortened = False
         self.magnifier_result = None
         # env setting
-=======
-        self.players["player1"] = {"health": 3, "items": [], "skip": False}
-        self.players["player2"] = {"health": 3, "items": [], "skip": False}
->>>>>>> 6791a0ef1ff6639aa5d5c8451794c5a5e226d548
         self.ready = False
         self.allowTools = allowItems
         self.startUp()
@@ -84,13 +74,9 @@ class GameEnv:
                 0: self.players[0].copy(),
                 1: self.players[1].copy()
             },
-<<<<<<< HEAD
             "shorted":self.shortened,
             "magnifier_result": self.magnifier_result,
             "ready" : False,
-=======
-            "ready" : self.ready,
->>>>>>> 6791a0ef1ff6639aa5d5c8451794c5a5e226d548
             "allowItems" : allowItems
         }
 
@@ -107,14 +93,9 @@ class GameEnv:
 
         if customItem:
             p1Item, p2Item = setItem(self.get_state())
-<<<<<<< HEAD
             self.players[0]["items"] = p1Item
             self.players[1]["items"] = p2Item
 
-=======
-            self.players["player1"]["items"] = p1Item
-            self.players["player2"]["items"] = p2Item
->>>>>>> 6791a0ef1ff6639aa5d5c8451794c5a5e226d548
         else:
             self.itemPerRound = random.randint(0,8)
             self.players[0]["items"] = self.getRandItem(self.itemPerRound)
@@ -126,7 +107,6 @@ class GameEnv:
             self.players[0]["health"] = health
             self.players[1]["health"] = health
         else:
-<<<<<<< HEAD
             p1hp,p2hp,maxHp = setHealth(self.get_state())
             self.players[0]["health"] = p1hp
             self.players[1]["health"] = p2hp
@@ -272,11 +252,6 @@ class GameEnv:
         self.bullets_blank = Bullet["blank"]
         self.bullets_live = Bullet["live"]
                 
-=======
-            p1hp, p2hp = setHealth(self.get_state())
-            self.players["player1"]["health"] = p1hp
-            self.players["player2"]["health"] = p2hp
->>>>>>> 6791a0ef1ff6639aa5d5c8451794c5a5e226d548
 
     def step(self, action):
         """
