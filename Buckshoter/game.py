@@ -25,13 +25,15 @@ class GameEnv:
 
         # 個別玩家資訊
         self.players = {
-            "player1": {
+            0: {
                 "health": 3,
-                "items": []
+                "items": [],
+                "skip": False
             },
-            "player2": {
+            1: {
                 "health": 3,
-                "items": []
+                "items": [],
+                "skip": False
             }
         }
         
@@ -42,12 +44,15 @@ class GameEnv:
         # game data
         self.turn = 0
         self.round = 1
+        self.maxHealth = 0
+        self.itemPerRound = 0
         self.bullets_live = 0
         self.bullets_blank = 0
-        self.players["player1"] = {"health": 0, "items": [], "skip" : False}
-        self.players["player2"] = {"health": 0, "items": [], "skip" : False}
+        self.bulletsList = []
+        self.players[0] = {"health": 0, "items": [], "skip" : False}
+        self.players[1] = {"health": 0, "items": [], "skip" : False}
         self.shortened = False
-
+        self.magnifier_result = None
         # env setting
         self.ready = False
         self.allowToos = allowItems
@@ -58,14 +63,18 @@ class GameEnv:
         return {
             "turn": self.turn,
             "round": self.round,
+            "maxHealth":self.maxHealth,
+            "itemPerRound": self.itemPerRound,
             "bulletsOnTable": {
                 "live": self.bullets_live,
                 "blank": self.bullets_blank
             },
             "players": {
-                "player1": self.players["player1"].copy(),
-                "player2": self.players["player2"].copy()
+                0: self.players[0].copy(),
+                1: self.players[1].copy()
             },
+            "shorted":self.shortened,
+            "magnifier_result": self.magnifier_result,
             "ready" : False,
             "allowItems" : allowItems
             
@@ -78,33 +87,174 @@ class GameEnv:
             red = random.randint(1, total - 1)
             gray = total - red
             Bullet = {"live": red, "blank": gray}
+            self.bulletsList = random.sample([True]*(Bullet["live"]) + [False]*(Bullet["blank"]), total)
         
         self.bullets_blank = Bullet["blank"]
         self.bullets_live = Bullet["live"]
         if customItem:
             
             p1Item, p2Item = setItem(self.get_state())
-            self.players["player1"]["items"] = p1Item
-            self.players["player2"]["items"] = p2Item
+            self.players[0]["items"] = p1Item
+            self.players[1]["items"] = p2Item
 
         else:
-            itemAmount = random.randint(0,8)
-            self.players["player1"]["items"] = random.choices(allowItems,k=itemAmount)
-            self.players["player2"]["items"] = random.choices(allowItems,k=itemAmount)
+            self.itemPerRound = random.randint(0,8)
+            self.players[0]["items"] = self.getRandItem(self.itemPerRound)
+            self.players[1]["items"] = self.getRandItem(self.itemPerRound)
 
         self.turn = 0
         self.round = 1
         if customHealth == False:
             health = random.randint(3,6)
-            self.players["player1"]["health"] = health
-            self.players["player2"]["health"] = health
+            self.maxHealth = health
+            self.players[0]["health"] = health
+            self.players[1]["health"] = health
         else:
-            p1hp,p2hp = setHealth(self.get_state())
-            self.players["player1"]["health"] = p1hp
-            self.players["player2"]["health"] = p2hp
+            p1hp,p2hp,maxHp = setHealth(self.get_state())
+            self.players[0]["health"] = p1hp
+            self.players[1]["health"] = p2hp
+            self.maxHealth = maxHp
     
-    def step(self):
-        return "no step"
+    def step(self, action):
+        """
+        執行一個動作
+        return: obs, reward, done, info
+        """
+        player = self.turn
+        opponent = 1 - player
+        reward = 0
+        done = False
+        info = {}
+        # 先檢查：還有沒有子彈
+        if  self.players[player]["skip"]==True:
+            self.turn = 1 - self.turn
+            self.players[player]["skip"]==False
+            obs = self.get_state()
+            return obs, reward,done,info
+
+
+        if not self.bulletsList:
+            self.newRound()
+            self.round +=1
+            info["round"] = self.round
+            return self.get_state(), reward, done, info
+        # 1. 執行動作
+        if ACTION_SPACE[action] == "shoot_opponent":
+            current_bullet = self.bulletsList.pop(0)
+            if current_bullet:  # 實彈
+                if self.shortened:
+                    self.players[opponent]["health"] -= 2
+                    reward = 0.5
+                else:
+                    self.players[opponent]["health"] -= 1
+                    reward = 0.3
+                self.bullets_live -=1
+            else:  # 空彈
+                self.bullets_blank -=1
+                reward = -0.1
+
+            # if self.players[opponent]["skip"] == 0:
+            #     self.turn = 1 - self.turn  # 如果對方沒被手銬就換人
+            # elif self.players[opponent]["skip"] < 0:
+            #     return ValueError("不應該出現負數")
+            # else: self.players[opponent]["skip"] -= 1  # 被手銬後下一輪
+
+            self.magnifier_result = None # 開槍後清空提示
+        elif ACTION_SPACE[action] == "shoot_self":
+            current_bullet = self.bulletsList.pop(0)
+            if current_bullet:  # 實彈
+                if self.shortened:
+                    self.players[player]["health"] -= 2
+                    reward = -0.5
+                else:
+                    self.players[player]["health"] -= 1
+                    reward = -0.3
+                self.bullets_live -=1
+                self.turn = 1 - self.turn
+            else:  # 空彈
+                self.bullets_blank -=1
+                reward = 0.2
+                # 這裡你可以決定：要不要換人？
+                # 如果規則是空彈自己可繼續 -> 不換人
+                # 如果規則是仍然換人 -> self.turn = 1 - self.turn
+            # if self.players[opponent]["skip"] == 0:
+            #     self.turn = 1 - self.turn  # 如果對方沒被手銬就換人
+            # elif self.players[opponent]["skip"] < 0:
+            #     return ValueError("不應該出現負數")
+            # else: self.players[opponent]["skip"] -= 1  # 被手銬後不換人
+            self.magnifier_result = None # 開槍後清空提示
+
+        # 道具的部分你可以再往下加分支
+        # V1_props = ["magnifier","cigarette","beer","saw","handcuffs"]
+        elif ACTION_SPACE[action] == "use_item_magnifier": 
+            if "magnifier" in self.players[player]["items"]:
+                self.players[player]["items"].remove("magnifier")
+                self.magnifier_result = self.bulletsList[0]    
+            else:
+                reward = -1       
+        elif ACTION_SPACE[action] == "use_item_cigarette":
+            if "cigarette" in self.players[player]["items"]:
+                self.players[player]["items"].remove("cigarette")
+                if self.players[player]["health"]< self.maxHealth:
+                    self.players[player]["health"] +=1
+                else: reward = -0.1
+            else: reward = -1
+        elif ACTION_SPACE[action] == "use_item_beer":
+            if "beer" in self.players[player]["items"]:
+                self.players[player]["items"].remove("beer")
+                current_bullet = self.bulletsList.pop(0)
+                self.magnifier_result = None
+                if current_bullet:
+                    self.bullets_live -=1
+                else:
+                    self.bullets_blank -=1
+        elif ACTION_SPACE[action] == "use_item_saw":
+            if "saw" in self.players[player]["items"]:
+                self.players[player]["items"].remove("saw")
+                self.shortened = True
+            else: reward = -1
+        elif ACTION_SPACE[action] == "use_item_handcuffs":
+            if "saw" in self.players[player]["items"]:
+                self.players[player]["items"].remove("saw")
+                self.players[opponent]["skip"] = True
+            else: reward = -1
+        else:
+            return ValueError(f"Action: {action} not found")
+        
+        if self.players[player]["health"] <= 0:
+            done = True
+            reward = -1
+            info["reason"] = f"player{player} dead"
+        if self.players[opponent]["health"] <= 0:
+            done = True
+            reward = 1
+            info["reason"] = f"player{opponent} dead"
+        obs = self.get_state()
+        return obs, reward, done, info
+
+    
+    def getRandItem(self,amount):
+        return random.choices(allowItems,k=amount)
+    
+    def newRound(self):
+        # 抽新道具
+        if 8 - (len(self.players[0]["items"]))>self.itemPerRound:
+            self.players[0]["items"] += self.getRandItem(self.itemPerRound)
+        else: self.players[0]["items"] += self.getRandItem(8 - len(self.players[0]["items"]))
+        if 8 - len(self.players[1]["items"])>self.itemPerRound:
+            self.players[1]["items"] += self.getRandItem(self.itemPerRound)
+        else: self.players[1]["items"] += self.getRandItem(8 - len(self.players[1]["items"]))
+        # 重抽子彈
+        total = random.randint(3, 8)
+        # red 至少 1，gray 至少 1
+        red = random.randint(1, total - 1)
+        gray = total - red
+        Bullet = {"live": red, "blank": gray}
+        self.bulletsList = random.sample([True]*(Bullet["live"]) + [False]*(Bullet["blank"]), total)
+        
+        self.bullets_blank = Bullet["blank"]
+        self.bullets_live = Bullet["live"]
+                
 
     
         

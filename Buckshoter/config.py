@@ -6,4 +6,5 @@ def setItem(state):
 
 def setHealth(state):
     health = 4
-    return health,health #p1,p2
+    maxHP = 4
+    return health,health,maxHP #p1,p2
