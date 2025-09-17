@@ -54,7 +54,6 @@ class GameEnv:
         self.shortened = False
         self.magnifier_result = None
         # env setting
-        self.ready = False
         self.allowToos = allowItems
         self.startUp()
 
@@ -75,9 +74,6 @@ class GameEnv:
             },
             "shorted":self.shortened,
             "magnifier_result": self.magnifier_result,
-            "ready" : False,
-            "allowItems" : allowItems
-            
         }
 
     def startUp(self,customHealth = False,Bullet = None,customItem = False):
@@ -127,6 +123,7 @@ class GameEnv:
             self.turn = 1 - self.turn
             self.players[player]["skip"]=False
             obs = self.get_state()
+            print(f"Player: {player} is skipped!")
             return obs, reward,done,info
 
 
@@ -135,18 +132,23 @@ class GameEnv:
             self.newRound()
             self.round +=1
             info["round"] = self.round
+            print(f"New Round, bullet list: {self.bulletsList}")
             return self.get_state(), reward, done, info
         # 1. 執行動作
         if ACTION_SPACE[action] == "shoot_opponent":
             current_bullet = self.bulletsList.pop(0)
+            print(f"Origin: Live: {self.bullets_live}, Blank: {self.bullets_blank}.\n Opponent: {opponent},health:{self.players[opponent]}")
             if current_bullet:  # 實彈
                 if self.shortened:
                     self.players[opponent]["health"] -= 2
                     reward = 0.5
+                    self.shortened = False
                 else:
                     self.players[opponent]["health"] -= 1
                     reward = 0.3
                 self.bullets_live -=1
+                print(f"After: Live: {self.bullets_live}, Blank: {self.bullets_blank}.\n Opponent: {opponent},health:{self.players[opponent]}")
+
             else:  # 空彈
                 self.bullets_blank -=1
                 reward = -0.1
@@ -164,6 +166,7 @@ class GameEnv:
                 if self.shortened:
                     self.players[player]["health"] -= 2
                     reward = -0.5
+                    self.shortened = False
                 else:
                     self.players[player]["health"] -= 1
                     reward = -0.3
@@ -235,12 +238,9 @@ class GameEnv:
     
     def newRound(self):
         # 抽新道具
-        if 8 - (len(self.players[0]["items"]))>self.itemPerRound:
-            self.players[0]["items"] += self.getRandItem(self.itemPerRound)
-        else: self.players[0]["items"] += self.getRandItem(8 - len(self.players[0]["items"]))
-        if 8 - len(self.players[1]["items"])>self.itemPerRound:
-            self.players[1]["items"] += self.getRandItem(self.itemPerRound)
-        else: self.players[1]["items"] += self.getRandItem(8 - len(self.players[1]["items"]))
+        self.players[0]["items"] += self.getRandItem(min(self.itemPerRound, 8 - len(self.players[0]["items"])))
+        self.players[1]["items"] += self.getRandItem(min(self.itemPerRound, 8 - len(self.players[1]["items"])))
+
         # 重抽子彈
         total = random.randint(3, 8)
         # red 至少 1，gray 至少 1
