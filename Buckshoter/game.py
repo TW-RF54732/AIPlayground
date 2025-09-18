@@ -61,6 +61,7 @@ class GameEnv:
         """把當前遊戲狀態轉成 dict(方便丟給AI觀察用)"""
         return {
             "turn": self.turn,
+            "round": self.round,
             "maxHealth":self.maxHealth,
             "itemPerRound": self.itemPerRound,
             "bulletsOnTable": {
@@ -71,7 +72,7 @@ class GameEnv:
                 0: self.players[0].copy(),
                 1: self.players[1].copy()
             },
-            "shorted":self.shortened,
+            "shorted": self.shortened,
             "magnifier_result": self.magnifier_result,
             "action_mask" : self.get_action_mask()
         }
@@ -152,6 +153,9 @@ class GameEnv:
             else:  # 空彈
                 self.bullets_blank -=1
                 reward = -0.1
+                
+            self.turn = 1 - self.turn
+            self.magnifier_result = None # 開槍後清空提示
 
             # if self.players[opponent]["skip"] == 0:
             #     self.turn = 1 - self.turn  # 如果對方沒被手銬就換人
@@ -159,7 +163,6 @@ class GameEnv:
             #     return ValueError("不應該出現負數")
             # else: self.players[opponent]["skip"] -= 1  # 被手銬後下一輪
 
-            self.magnifier_result = None # 開槍後清空提示
         elif ACTION_SPACE[action] == "shoot_self":
             current_bullet = self.bulletsList.pop(0)
             if current_bullet:  # 實彈
