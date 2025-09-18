@@ -61,7 +61,6 @@ class GameEnv:
         """把當前遊戲狀態轉成 dict(方便丟給AI觀察用)"""
         return {
             "turn": self.turn,
-            "round": self.round,
             "maxHealth":self.maxHealth,
             "itemPerRound": self.itemPerRound,
             "bulletsOnTable": {
@@ -74,6 +73,7 @@ class GameEnv:
             },
             "shorted":self.shortened,
             "magnifier_result": self.magnifier_result,
+            "action_mask" : self.get_action_mask()
         }
 
     def startUp(self,customHealth = False,Bullet = None,customItem = False):
@@ -123,7 +123,7 @@ class GameEnv:
             self.turn = 1 - self.turn
             self.players[player]["skip"]=False
             obs = self.get_state()
-            print(f"Player: {player} is skipped!")
+            # print(f"Player: {player} is skipped!")
             return obs, reward,done,info
 
 
@@ -132,12 +132,12 @@ class GameEnv:
             self.newRound()
             self.round +=1
             info["round"] = self.round
-            print(f"New Round, bullet list: {self.bulletsList}")
+            # print(f"New Round, bullet list: {self.bulletsList}")
             return self.get_state(), reward, done, info
         # 1. 執行動作
         if ACTION_SPACE[action] == "shoot_opponent":
             current_bullet = self.bulletsList.pop(0)
-            print(f"Origin: Live: {self.bullets_live}, Blank: {self.bullets_blank}.\n Opponent: {opponent},health:{self.players[opponent]}")
+            # print(f"Origin: Live: {self.bullets_live}, Blank: {self.bullets_blank}.\n Opponent: {opponent},health:{self.players[opponent]}")
             if current_bullet:  # 實彈
                 if self.shortened:
                     self.players[opponent]["health"] -= 2
@@ -147,7 +147,7 @@ class GameEnv:
                     self.players[opponent]["health"] -= 1
                     reward = 0.3
                 self.bullets_live -=1
-                print(f"After: Live: {self.bullets_live}, Blank: {self.bullets_blank}.\n Opponent: {opponent},health:{self.players[opponent]}")
+                # print(f"After: Live: {self.bullets_live}, Blank: {self.bullets_blank}.\n Opponent: {opponent},health:{self.players[opponent]}")
 
             else:  # 空彈
                 self.bullets_blank -=1
@@ -251,8 +251,31 @@ class GameEnv:
         
         self.bullets_blank = Bullet["blank"]
         self.bullets_live = Bullet["live"]
-                
 
-    
-        
 
+    def get_action_mask(self):
+        # ACTION_SPACE = {
+        #     0: "shoot_opponent",
+        #     1: "shoot_self",
+        #     2: "use_item_magnifier",
+        #     3: "use_item_cigarette",
+        #     4: "use_item_beer",
+        #     5: "use_item_saw",
+        #     6: "use_item_handcuffs"  
+        # }
+        player = self.turn
+        mask = [1] * len(ACTION_SPACE)  # 預設全部可選
+
+        # 沒有道具就不能使用對應動作
+        if "magnifier" not in self.players[player]["items"] or self.magnifier_result != None:
+            mask[2] = 0
+        if "cigarette" not in self.players[player]["items"]:
+            mask[3] = 0
+        if "beer" not in self.players[player]["items"]:
+            mask[4] = 0
+        if "saw" not in self.players[player]["items"] or self.shortened == True:
+            mask[5] = 0
+        if "handcuffs" not in self.players[player]["items"] or self.players[1-player]["skip"] == True:
+            mask[6] = 0
+
+        return mask
