@@ -120,12 +120,12 @@ class GameEnv:
         reward = 0
         done = False
         info = {}
-        if  self.players[player]["skip"]==True:
-            self.turn = 1 - self.turn
-            self.players[player]["skip"]=False
-            obs = self.get_state()
-            # print(f"Player: {player} is skipped!")
-            return obs, reward,done,info
+        # if  self.players[player]["skip"]==True:
+        #     self.turn = 1 - self.turn
+        #     self.players[player]["skip"]=False
+        #     obs = self.get_state()
+        #     # print(f"Player: {player} is skipped!")
+        #     return obs, reward,done,info
 
 
         # 先檢查：還有沒有子彈
@@ -153,8 +153,14 @@ class GameEnv:
             else:  # 空彈
                 self.bullets_blank -=1
                 reward = -0.1
-                
-            self.turn = 1 - self.turn
+            
+            if self.players[opponent]["skip"] == True:
+                self.players[opponent]["skip"] = False
+            else:
+                if self.players[opponent]["skip"] == True:
+                    self.players[opponent]["skip"] = False
+                else:
+                    self.turn = 1 - self.turn
             self.magnifier_result = None # 開槍後清空提示
 
             # if self.players[opponent]["skip"] == 0:
@@ -174,7 +180,11 @@ class GameEnv:
                     self.players[player]["health"] -= 1
                     reward = -0.3
                 self.bullets_live -=1
-                self.turn = 1 - self.turn
+                if self.players[opponent]["skip"] == True:
+                    self.players[opponent]["skip"] = False
+                else:
+                    self.turn = 1 - self.turn 
+
             else:  # 空彈
                 self.bullets_blank -=1
                 reward = 0.2
@@ -282,3 +292,20 @@ class GameEnv:
             mask[6] = 0
 
         return mask
+
+
+if __name__ == "__main__":
+    print("You are running the game script. It is for testing")
+    env = GameEnv()
+    env.reset()
+
+    done = False
+
+    while(done == False):
+        print(f"You are: {env.turn}\nYour state:")
+        print(env.players[env.turn])
+        print("Oppoment's state:")
+        print(env.players[1 - env.turn])
+        move = int(input(f"Enter your move. Avalible: {env.get_action_mask()}"))
+        obs, reward, done, info = env.step(move)
+        print(reward)
