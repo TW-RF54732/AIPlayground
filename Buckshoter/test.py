@@ -1,1 +1,4 @@
-print(int(True))
+a = 1
+a <<=2
+
+print(~-111)
