@@ -1,7 +1,7 @@
 import random
 from config import setItem,setHealth
 V1_props = ["magnifier","cigarette","beer","saw","handcuffs"]
-V2_props = ["phone","Reverser","Epinephrine","medications"]
+# V2_props = ["phone","Reverser","Epinephrine","medications"]
 
 allowItems = V1_props
 
@@ -128,13 +128,7 @@ class GameEnv:
         #     return obs, reward,done,info
 
 
-        # 先檢查：還有沒有子彈
-        if not self.bulletsList:
-            self.newRound()
-            self.round +=1
-            info["round"] = self.round
-            # print(f"New Round, bullet list: {self.bulletsList}")
-            return self.get_state(), reward, done, info
+
         # 1. 執行動作
         if ACTION_SPACE[action] == "shoot_opponent":
             current_bullet = self.bulletsList.pop(0)
@@ -242,6 +236,13 @@ class GameEnv:
             done = True
             reward = 1
             info["reason"] = f"player{opponent} dead"
+            
+        # 先檢查：還有沒有子彈
+        if not self.bulletsList:
+            self.newRound()
+            self.round +=1
+            info["round"] = self.round
+
         obs = self.get_state()
         return obs, reward, done, info
 
@@ -279,16 +280,16 @@ class GameEnv:
         player = self.turn
         mask = [1] * len(ACTION_SPACE)  # 預設全部可選
 
-        # 沒有道具就不能使用對應動作
-        if "magnifier" not in self.players[player]["items"] or self.magnifier_result != None:
+        # 沒有道具就不能使用對應動作 or 道具本身限制
+        if "magnifier" not in self.players[player]["items"] or self.magnifier_result != None: # 已經使用過不得重複
             mask[2] = 0
         if "cigarette" not in self.players[player]["items"]:
             mask[3] = 0
         if "beer" not in self.players[player]["items"]:
             mask[4] = 0
-        if "saw" not in self.players[player]["items"] or self.shortened == True:
+        if "saw" not in self.players[player]["items"] or self.shortened == True: # 已經使用過不得重複
             mask[5] = 0
-        if "handcuffs" not in self.players[player]["items"] or self.players[1-player]["skip"] == True:
+        if "handcuffs" not in self.players[player]["items"] or self.players[1-player]["skip"] == True: # 已經使用過不得重複
             mask[6] = 0
 
         return mask

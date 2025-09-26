@@ -21,7 +21,7 @@ def flatten_obs(obs: dict):
     return np.array(vec, dtype=np.float32)
 
 
-def run_episode(env, policy):
+def run_episode(env, policy, device="cpu"):
     """跑一局遊戲，回傳 log_probs 與 rewards"""
     log_probs, rewards = [], []
     done = False
@@ -29,9 +29,10 @@ def run_episode(env, policy):
 
     while not done:
         obs = env.get_state()
-        obs_vec = torch.tensor(flatten_obs(obs), dtype=torch.float32).unsqueeze(0)
+        obs_vec = torch.tensor(flatten_obs(obs), dtype=torch.float32, device=device).unsqueeze(0)
 
-        action_mask = obs["action_mask"]
+        action_mask = torch.tensor(obs["action_mask"], dtype=torch.float32, device=device)
+
         probs = policy(obs_vec, action_mask)
         dist = Categorical(probs)
         action = dist.sample()
