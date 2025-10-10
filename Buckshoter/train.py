@@ -1,53 +1,45 @@
-# train.py
 import torch
-import torch.nn as nn
 import torch.optim as optim
-from runner import run_episode
+from game import GameEnv, ACTION_SPACE
 from policy import PolicyNet
-from game import GameEnv
-import matplotlib.pyplot as plt
+from runner import run_episode, flatten_obs
+import os
 
-def train_selfplay(episodes=500, lr=1e-3, save_path="policy.pth"):
+def train_selfplay(episodes=500, save_path="models/policy.pth"):
+    # 自動偵測 GPU/CPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("使用裝置:", device)
+
     env = GameEnv()
     env.reset()
-    obs_size = len(env.get_state()["action_mask"]) + 13  # 假設 flatten_obs 固定長度13
-    action_size = len(env.get_state()["action_mask"])
-    policy = PolicyNet(obs_size, action_size)
-    optimizer = optim.Adam(policy.parameters(), lr=lr)
-
-    rewards_history = []
+    state = env.get_state()
+    sample_obs = flatten_obs(state)
+    obs_dim = len(sample_obs)   # <-- 自動偵測
+    act_dim = len(ACTION_SPACE)
+    
+    policy = PolicyNet(obs_dim, act_dim).to(device)   # 模型搬到 GPU/CPU
+    optimizer = optim.Adam(policy.parameters(), lr=1e-3)
 
     for ep in range(episodes):
-        log_probs, rewards = run_episode(env, policy)
-        total_reward = sum(rewards)
-        rewards_history.append(total_reward)
+        env = GameEnv()
+        log_probs, rewards = run_episode(env, policy, device=device)  # 把 device 傳下去
 
-        # Policy gradient
-        loss = []
-        G = 0
-        for log_prob, reward in zip(reversed(log_probs), reversed(rewards)):
-            G = reward + 0.99 * G
-            loss.insert(0, -log_prob * G)
-        loss = torch.stack(loss).sum()
+        # 總回報 (最簡 REINFORCE)
+        R = sum(rewards)
+        if log_probs:  # 避免遊戲瞬間結束 log_probs 為空
+            loss = -torch.stack(log_probs).sum() * R
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+        print(f"Episode {ep}, Return={R:.2f}, Round={env.round}")
 
-        if (ep+1) % 50 == 0:
-            avg_reward = sum(rewards_history[-50:]) / 50
-            print(f"Episode {ep+1}/{episodes}, AvgReward={avg_reward:.2f}")
-
-    # 存模型
+    # 儲存模型（僅儲存參數，不管 GPU/CPU）
     torch.save(policy.state_dict(), save_path)
+    print(f"模型已保存到 {os.path.abspath(save_path)}")
 
-    # 畫 Reward 曲線
-    plt.plot(rewards_history)
-    plt.xlabel("Episode")
-    plt.ylabel("Total Reward")
-    plt.title("Training Progress")
-    plt.savefig("training_curve.png")
-    plt.close()
+    return policy
+
 
 if __name__ == "__main__":
-    train_selfplay(episodes=500000)
+    train_selfplay(episodes=50, save_path="models/policy.pth")
