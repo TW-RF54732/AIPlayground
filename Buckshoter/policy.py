@@ -8,6 +8,8 @@ class PolicyNet(nn.Module):
         super().__init__()
         self.fc1 = nn.Linear(obs_dim, 128)
         self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(256, 256)
+        self.fc5 = nn.Linear(256, 128)
         self.logits = nn.Linear(128, act_dim)
 
     def forward(self, x, action_mask=None):
