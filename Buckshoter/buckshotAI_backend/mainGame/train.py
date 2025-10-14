@@ -1,8 +1,8 @@
 import torch
 import torch.optim as optim
-from game import GameEnv, ACTION_SPACE
-from policy import PolicyNet
-from runner import run_episode, flatten_obs
+from mainGame.game import GameEnv, ACTION_SPACE
+from mainGame.policy import PolicyNet
+from mainGame.runner import run_episode, flatten_obs
 import os
 
 def train_selfplay(episodes=500, save_path="models/policy.pth"):

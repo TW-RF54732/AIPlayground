@@ -1,8 +1,8 @@
 import torch
 import numpy as np
-from game import GameEnv, ACTION_SPACE
-from policy import PolicyNet
-from runner import flatten_obs
+from mainGame.game import GameEnv, ACTION_SPACE
+from mainGame.policy import PolicyNet
+from mainGame.runner import flatten_obs
 
 def player_vs_ai(model_path="models/policy.pth"):
     # 初始化環境與模型
