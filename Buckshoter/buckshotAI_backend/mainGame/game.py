@@ -1,5 +1,5 @@
 import random
-from config import setItem,setHealth
+from mainGame.config import setItem,setHealth
 V1_props = ["magnifier","cigarette","beer","saw","handcuffs"]
 # V2_props = ["phone","Reverser","Epinephrine","medications"]
 
