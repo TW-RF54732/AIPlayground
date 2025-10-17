@@ -1,5 +1,4 @@
 import random
-from mainGame.config import setItem,setHealth
 V1_props = ["magnifier","cigarette","beer","saw","handcuffs"]
 # V2_props = ["phone","Reverser","Epinephrine","medications"]
 
@@ -54,6 +53,9 @@ class GameEnv:
         self.shortened = False
         self.magnifier_result = None
         # env setting
+        self.customHealth = False
+        self.customBullet = False
+        self.customItem = False
         self.allowToos = allowItems
         self.startUp()
 
@@ -77,8 +79,11 @@ class GameEnv:
             "action_mask" : self.get_action_mask()
         }
 
-    def startUp(self,customHealth = False,Bullet = None,customItem = False):
-        if(Bullet==None):
+    #   If you want to custom any value like customBullet of some thing,
+    #   just attribute assignment.
+
+    def startUp(self): 
+        if(self.customBullet==False):
             total = random.randint(3, 8)
             # red 至少 1，gray 至少 1
             red = random.randint(1, total - 1)
@@ -88,27 +93,17 @@ class GameEnv:
         
         self.bullets_blank = Bullet["blank"]
         self.bullets_live = Bullet["live"]
-        if customItem:
-            
-            p1Item, p2Item = setItem(self.get_state())
-            self.players[0]["items"] = p1Item
-            self.players[1]["items"] = p2Item
-
-        else:
+        if self.customItem == False:
             self.itemPerRound = random.randint(0,8)
             self.players[0]["items"] = self.getRandItem(self.itemPerRound)
             self.players[1]["items"] = self.getRandItem(self.itemPerRound)
 
-        if customHealth == False:
+        if self.customHealth == False:
             health = random.randint(3,6)
             self.maxHealth = health
             self.players[0]["health"] = health
             self.players[1]["health"] = health
-        else:
-            p1hp,p2hp,maxHp = setHealth(self.get_state())
-            self.players[0]["health"] = p1hp
-            self.players[1]["health"] = p2hp
-            self.maxHealth = maxHp
+
     
     def step(self, action):
         """
