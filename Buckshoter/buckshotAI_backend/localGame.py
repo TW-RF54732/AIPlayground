@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request,FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from mainGame.game import GameEnv
@@ -6,9 +7,9 @@ router = FastAPI()
 current_game = None
 
 class gameSettings(BaseModel):
-    customHealth: bool
-    custombullet: bool
-    customItem: bool
+    customHealth: list[int]
+    custombullet: list[bool]
+    customItem: list[list[str]]
 
 '''
 This is the place to put API
@@ -31,7 +32,14 @@ def endGame():
 '''
 Game API
 '''
-@router.get("/api/game/getObs")
-def getObs():
+@router.get("/api/game/getStatus")
+def getStatus():
     global current_game
     return current_game.get_state()
+
+@router.get("/api/game/getAllowItems")
+def getAllowItems():
+    if current_game:
+        return current_game.allowTools
+    else:
+        return JSONResponse(status_code=409, content={"message": "You have to run the game before checking allow items"})

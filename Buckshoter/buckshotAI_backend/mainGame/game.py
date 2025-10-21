@@ -56,7 +56,7 @@ class GameEnv:
         self.customHealth = False
         self.customBullet = False
         self.customItem = False
-        self.allowToos = allowItems
+        self.allowTools = allowItems
         self.startUp()
 
     def get_state(self):
