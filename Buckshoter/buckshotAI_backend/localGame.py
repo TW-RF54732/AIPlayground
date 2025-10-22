@@ -8,7 +8,7 @@ router = FastAPI()
 current_game = None
 
 class gameSettings(BaseModel):
-    customHealth: Optional[list[int]] = None
+    customHealth: Optional[int] = None
     custombullet: Optional[list[bool]] = None
     customItem: Optional[list[list[str]]] = None
 
