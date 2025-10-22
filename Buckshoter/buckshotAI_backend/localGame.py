@@ -16,6 +16,12 @@ class gameSettings(BaseModel):
 This is the place to put API 
 All API in game's route is /api/game/...
 '''
+@router.get("/api/game/startDefaultGame")
+def startDefaultGame():
+    global current_game
+    current_game = GameEnv()
+    current_game.reset()
+    return JSONResponse(status_code=200,content={"message":"Game start!"})
 
 @router.post("/api/game/initGame")
 def initGame(setting:gameSettings):
