@@ -1,18 +1,19 @@
 from fastapi import APIRouter, Request,FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from typing import Optional
 
 from mainGame.game import GameEnv
 router = FastAPI()
 current_game = None
 
 class gameSettings(BaseModel):
-    customHealth: list[int]
-    custombullet: list[bool]
-    customItem: list[list[str]]
+    customHealth: Optional[list[int]] = None
+    custombullet: Optional[list[bool]] = None
+    customItem: Optional[list[list[str]]] = None
 
 '''
-This is the place to put API
+This is the place to put API 
 All API in game's route is /api/game/...
 '''
 
@@ -21,6 +22,21 @@ def initGame(setting:gameSettings):
     global current_game
     current_game = GameEnv()
     current_game.reset()
+    if setting.custombullet == None:
+        print("Running Default bullet")
+        current_game.bulletsList = setting.custombullet
+        current_game.customBullet = True
+        current_game.bullets_blank = setting.custombullet.count
+
+    if setting.customHealth == None:
+        print("Running Default bullet")
+        current_game.bulletsList = setting.custombullet
+        current_game.customBullet = True
+    if setting.customItem == None:
+        print("Running Default bullet")
+        current_game.bulletsList = setting.custombullet
+        current_game.customBullet = True
+        
     return current_game.get_state()
 
 @router.get("/api/game/endGame")

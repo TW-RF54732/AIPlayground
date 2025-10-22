@@ -90,9 +90,9 @@ class GameEnv:
             gray = total - red
             Bullet = {"live": red, "blank": gray}
             self.bulletsList = random.sample([True]*(Bullet["live"]) + [False]*(Bullet["blank"]), total)
-        
-        self.bullets_blank = Bullet["blank"]
-        self.bullets_live = Bullet["live"]
+            self.bullets_blank = Bullet["blank"]
+            self.bullets_live = Bullet["live"]
+
         if self.customItem == False:
             self.itemPerRound = random.randint(0,8)
             self.players[0]["items"] = self.getRandItem(self.itemPerRound)
