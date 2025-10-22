@@ -7,14 +7,20 @@ router = FastAPI()
 current_game = None
 
 class gameSettings(BaseModel):
-    customHealth: list[int]
+    customHealth: int
     custombullet: list[bool]
-    customItem: list[list[str]]
+    customItem: list[list[str],list[str]]
 
 '''
 This is the place to put API
 All API in game's route is /api/game/...
 '''
+@router.get("/api/game/startDefaultGame")
+def startDefaultGame():
+    global current_game
+    current_game = GameEnv()
+    current_game.reset()
+    return JSONResponse(status_code=200,content={"message":"Game start!"})
 
 @router.post("/api/game/initGame")
 def initGame(setting:gameSettings):
