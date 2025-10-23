@@ -57,7 +57,7 @@ class GameEnv:
         self.customBullet = False
         self.customItem = False
         self.allowTools = allowItems
-        self.startUp()
+        # self.startUp()
 
     def get_state(self):
         """把當前遊戲狀態轉成 dict(方便丟給AI觀察用)"""
@@ -97,12 +97,14 @@ class GameEnv:
             self.itemPerRound = random.randint(0,8)
             self.players[0]["items"] = self.getRandItem(self.itemPerRound)
             self.players[1]["items"] = self.getRandItem(self.itemPerRound)
+            
 
         if self.customHealth == False:
             health = random.randint(3,6)
             self.maxHealth = health
             self.players[0]["health"] = health
             self.players[1]["health"] = health
+        
 
     
     def step(self, action):
