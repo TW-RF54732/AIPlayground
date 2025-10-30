@@ -69,3 +69,5 @@ def getAllowItems():
         return current_game.allowTools
     else:
         return JSONResponse(status_code=409, content={"message": "You have to run the game before checking allow items"})
+
+print("test")
